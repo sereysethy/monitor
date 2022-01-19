@@ -1,0 +1,16 @@
+version: '3.6'
+
+services:
+  redis:
+    image: redis
+    container_name: redis
+  
+  monitor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: monitor
+    container_name: monitor
+    volumes:
+      - ./config.ini:/usr/src/app/config.ini
+      - /var/run/docker.sock:/var/run/docker.sock

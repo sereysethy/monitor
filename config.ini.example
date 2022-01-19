@@ -1,0 +1,10 @@
+[docker]
+uri = unix://var/run/docker.sock
+
+[redis]
+host = redis
+port = 6379
+
+[target_system]
+container_name = name_target_system
+network_interface = eth0
