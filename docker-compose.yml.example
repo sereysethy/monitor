@@ -4,13 +4,47 @@ services:
   redis:
     image: redis
     container_name: redis
-  
-  monitor:
+    ports:
+      - 6379:6379
+
+  monitor_stats:
     build:
       context: .
       dockerfile: Dockerfile
-    image: monitor
-    container_name: monitor
+    image: monitor_stats
+    depends_on:
+      - redis
+    command: ['python', 'metric.py']
+    container_name: monitor_stats
     volumes:
       - ./config.ini:/usr/src/app/config.ini
       - /var/run/docker.sock:/var/run/docker.sock
+      - ./logs:/usr/src/app/logs
+
+  monitor_process:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: monitor_process
+    depends_on:
+      - redis
+    command: ['python', 'process.py']
+    container_name: monitor_process
+    volumes:
+      - ./config.ini:/usr/src/app/config.ini
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./logs:/usr/src/app/logs
+
+  monitor_terminate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: monitor_terminate
+    depends_on:
+      - redis
+    command: ['python', 'terminate.py']
+    container_name: monitor_terminate
+    volumes:
+      - ./config.ini:/usr/src/app/config.ini
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./logs:/usr/src/app/logs
