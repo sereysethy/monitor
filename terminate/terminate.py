@@ -2,11 +2,12 @@ import logging
 import time
 import os
 import signal
+from logging.handlers import TimedRotatingFileHandler
 
 from settings import getLoglevel
 logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=getLoglevel(), 
                     handlers=[
-                        logging.FileHandler("logs/terminate.log"),
+                        TimedRotatingFileHandler("logs/terminate.log", when='midnight'),
                         logging.StreamHandler()
                     ])
 
@@ -63,3 +64,4 @@ def runTerminateProcessLoop():
 if __name__ == "__main__":
     logging.info("start the terminating process loop")
     runTerminateProcessLoop()
+

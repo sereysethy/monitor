@@ -3,7 +3,7 @@ import os
 from os.path import join
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
-config_path = join(dir_path, 'config.ini')
+config_path = join(dir_path, '..', 'config.ini')
 
 config = configparser.ConfigParser()
 config.read(config_path)
