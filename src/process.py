@@ -1,6 +1,7 @@
 import logging
 import time
 import json
+import docker
 from logging.handlers import TimedRotatingFileHandler
 
 from settings import getLoglevel
@@ -76,10 +77,17 @@ def runProcessLoop(container):
         time.sleep(LOOPING_TIME)
 
 if __name__ == "__main__":
-
     # connect to the running target system
     targetName = getTargetContainerName()
-    container = dockerClient.containers.get(targetName)
+    while True:
+        try:
+            container = dockerClient.containers.get(targetName)
+            if container:
+                break
+        except docker.errors.NotFound as e:
+            logging.error("%s", e)
+            time.sleep(5)
 
     logging.info("starting the process monitor loop")
     runProcessLoop(container)
+
