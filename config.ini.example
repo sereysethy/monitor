@@ -1,10 +1,27 @@
+[log]
+# DEBUG, INFO, WARNING, ERROR, CRITICAL
+level = INFO
+
 [docker]
 uri = unix://var/run/docker.sock
+debug = 1
 
 [redis]
 host = redis
 port = 6379
 
 [target_system]
-container_name = name_target_system
+container_name = honeypot
 network_interface = eth0
+
+[process_table]
+looping_time = 10
+channel = channel_process
+
+[terminate_process]
+channel = channel_terminate
+looping_time = 2
+
+[metric]
+metric_cpu_mem_avg_length = 10
+metric_network_avg_length = 10

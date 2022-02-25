@@ -6,4 +6,4 @@ RUN pip install -r requirements.txt
 
 COPY src /usr/src/app
 
-CMD ["python", "app.py"]
+# CMD ["python", "metric.py"]
