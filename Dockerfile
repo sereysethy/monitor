@@ -4,7 +4,7 @@ WORKDIR /usr/src/app
 COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 
-COPY src /usr/src/app
+COPY monitor /usr/monitor
 COPY terminate /usr/terminate
 
 # CMD ["python", "metric.py"]
