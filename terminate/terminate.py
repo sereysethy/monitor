@@ -1,32 +1,22 @@
-import logging
-import time
+import redis
 import os
+import logging
+import configparser
+import time
 import signal
+from os.path import join
+import sys
 from logging.handlers import TimedRotatingFileHandler
 
-from settings import getLoglevel
-logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=getLoglevel(), 
-                    handlers=[
-                        TimedRotatingFileHandler("logs/terminate.log", when='midnight'),
-                        logging.StreamHandler()
-                    ])
+# global
+global_running = True
 
-from settings import getTerminateProcessChannel, getTerminateProcessLoopingTime
-from utils import getRedisClient
+def handler(signum, stack):
+    global global_running
+    if signum == signal.SIGTERM:
+        global_running = False
 
-# metric, constant from the configuration file
-REDIS_TERMINATE_CHANNEL_NAME = getTerminateProcessChannel()
-TERMINATE_LOOPING_TIME = getTerminateProcessLoopingTime()
-logging.info('REDIS_TERMINATE_CHANNEL_NAME: %s', REDIS_TERMINATE_CHANNEL_NAME)
-logging.info('TERMINATE_LOOPING_TIME: %s', TERMINATE_LOOPING_TIME)
-
-redisClient = getRedisClient()
-channel = redisClient.pubsub()
-res = channel.subscribe(REDIS_TERMINATE_CHANNEL_NAME)
-logging.info('subscribing to the Redis channel: %s', REDIS_TERMINATE_CHANNEL_NAME)
-
-def runTerminateProcessLoop():
-
+def runTerminateProcessLoop(channel, loopingTime):
     """
     This function will fetch pid of a running process from a redis channel and
     terminate it by sending a SIGKILL signal.
@@ -47,7 +37,9 @@ def runTerminateProcessLoop():
         None
     """
 
-    while True:
+    global global_running
+
+    while global_running:
         message = channel.get_message()
         if message and message['type'] == 'message':
             pid = int(message['data'])
@@ -58,10 +50,49 @@ def runTerminateProcessLoop():
                 logging.error(e)
             except PermissionError as e:
                 logging.error(e)
-        time.sleep(TERMINATE_LOOPING_TIME)
+        time.sleep(loopingTime)
+
+# redis
+def getRedisClient(config):
+    try:
+        host = config.get('redis', 'host', fallback='localhost')
+        port = config.getint('redis', 'port', fallback=6379)
+        redisClient = redis.Redis(host=host, port=port)
+    except redis.ConnectionError:
+        exit(1)
+    
+    return redisClient
+
+if __name__ == "__main__":
+    signal.signal(signal.SIGTERM, handler)
+    if len(sys.argv) < 2:
+        sys.exit(1)
+
+    configPath = sys.argv[1]
+    config = configparser.ConfigParser()
+    config.read(configPath)
+    
+    logLevel = config.get('log', 'level', fallback='INFO')
+    logPath = config.get('log', 'path')
+    logPathname = join(logPath, 'terminate.log')
+    logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=logLevel, 
+        handlers=[
+            TimedRotatingFileHandler(logPathname, when='midnight'),
+            logging.StreamHandler()
+        ])
+
+    channelName = config.get('terminate', 'channel_name')
+    loopingTime = config.getint('terminate', 'looping_time')
+
+    logging.info('REDIS_TERMINATE_CHANNEL_NAME: %s', channelName)
+    logging.info('TERMINATE_LOOPING_TIME: %s', loopingTime)
+
+    redisClient = getRedisClient(config)
+    channel = redisClient.pubsub()
+    channel.subscribe(channelName)
+    logging.info('subscribing to the Redis channel: %s', channelName)
+
+    logging.info("start the terminating process loop")
+    runTerminateProcessLoop(channel, loopingTime)
 
     
-if __name__ == "__main__":
-    logging.info("start the terminating process loop")
-    runTerminateProcessLoop()
-
