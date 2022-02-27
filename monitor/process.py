@@ -2,12 +2,15 @@ import logging
 import time
 import json
 import docker
+from os.path import join
 from logging.handlers import TimedRotatingFileHandler
+from settings import getLoglevel, getLogpath
 
-from settings import getLoglevel
-logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=getLoglevel(), 
+logpath = join(getLogpath(), 'process.log')
+loglevel = getLoglevel()
+logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=loglevel, 
                     handlers=[
-                        TimedRotatingFileHandler("logs/process.log", when='midnight'),
+                        TimedRotatingFileHandler(logpath, when='midnight'),
                         logging.StreamHandler()
                     ])
 

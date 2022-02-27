@@ -9,37 +9,35 @@ config = configparser.ConfigParser()
 config.read(config_path)
 
 def getLoglevel():
-    return config['log']['level']
+    return config.get('log', 'level', fallback="INFO")
+
+def getLogpath():
+    return config.get('log', 'path', fallback="/usr/monitor/log")
 
 def getTargetContainerName():
-    return config['target_system']['container_name']
+    return config.get('target_system', 'container_name')
 
 def getNetworkInterface():
-    return config['target_system']['network_interface']
+    return config.get('target_system', 'network_interface')
 
 def getDockerURI():
-    return config['docker']['uri']
+    return config.get('docker', 'uri')
 
 def getRedisHost():
-    return config['redis']['host']
+    return config.get('redis', 'host', fallback='localhost')
 
 def getRedisPort():
-    return int(config['redis']['port'])
+    return config.getint('redis', 'port', fallback=6379)
 
 def getProcessChannel():
-    return config['process_table']['channel']
+    return config.get('process', 'channel')
 
 def getProcessLoopingTime():
-    return int(config['process_table']['looping_time'])
-
-def getTerminateProcessChannel():
-    return config['terminate_process']['channel']
-
-def getTerminateProcessLoopingTime():
-    return int(config['terminate_process']['looping_time'])
+    return config.getint('process', 'looping_time')
 
 def getCPUMemMetricAvgLength():
-    return int(config['metric']['metric_cpu_mem_avg_length'])
+    return config.getint('metric', 'metric_cpu_mem_avg_length')
 
 def getNetworkMetricAvgLength():
-    return int(config['metric']['metric_network_avg_length'])
+    return config.getint('metric', 'metric_network_avg_length')
+

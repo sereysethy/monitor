@@ -3,11 +3,14 @@ import time
 import numpy as np
 import docker
 from logging.handlers import TimedRotatingFileHandler
+from os.path import join
+from settings import getLoglevel, getLogpath
 
-from settings import getLoglevel
-logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=getLoglevel(), 
+logpath = join(getLogpath(), 'metric.log')
+loglevel = getLoglevel()
+logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=loglevel, 
                     handlers=[
-                        TimedRotatingFileHandler("logs/metric.log", when='midnight'),
+                        TimedRotatingFileHandler(logpath, when='midnight'),
                         logging.StreamHandler()
                     ])
 
@@ -15,6 +18,19 @@ from settings import getTargetContainerName, getNetworkInterface
 from settings import getCPUMemMetricAvgLength, getNetworkMetricAvgLength
 
 from utils import getRedisClient, getDockerClient
+
+keys = [
+    'list_cpu_usage_per',
+    'list_mem_usage_per',
+    'list_net_in_byte',
+    'list_net_out_byte',
+    'avg_net_flow_in_byte',
+    'avg_net_flow_out_byte',
+    'cpu_usage_per',
+    'mem_usage_per',
+    'net_in_byte',
+    'mem_out_byte',
+]
 
 # get docker client
 dockerClient = getDockerClient()
@@ -80,7 +96,7 @@ def runMetricsLoop(container, networkInterface):
         redisClient.lpush('list_cpu_usage_per', cpuUsagePercent)
         redisClient.lpush('list_mem_usage_per', memUsagePercent)
         redisClient.lpush('list_net_in_byte', netInUsageByte)
-        redisClient.lpush('list_mem_out_byte', netOutUsageByte)
+        redisClient.lpush('list_net_out_byte', netOutUsageByte)
 
         # set the current metric to the redis
         redisClient.set('cpu_usage_per', cpuUsagePercent)
@@ -141,7 +157,15 @@ def calAvgNetworkFlow():
     redisClient.set('avg_net_flow_in_byte', avgNetFlowIn)
     redisClient.set('avg_net_flow_out_byte', avgNetFlowOut)
 
+def clearRedisKeys():
+    logging.info('Clear all Redis keys')
+    for key in keys:
+        logging.info('Delete key: %s', key)
+        redisClient.delete(key)
+
 if __name__ == "__main__":
+
+    clearRedisKeys()
 
     # connect to the running target system
     targetName = getTargetContainerName()
