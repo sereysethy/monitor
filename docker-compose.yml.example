@@ -1,50 +1,36 @@
 version: '3.6'
 
 services:
-  redis:
-    image: redis
-    container_name: redis
-    ports:
-      - 6379:6379
-
-  monitor_stats:
+  monitor_metric:
     build:
       context: .
-      dockerfile: Dockerfile
-    image: monitor_stats
-    depends_on:
-      - redis
+      dockerfile: Dockerfile_monitor
+      args:
+        COWRIE_USER_ID: ${COWRIE_USER_ID}
+        COWRIE_GROUP_ID: ${COWRIE_GROUP_ID}
+        DOCKER_GROUP_ID: ${DOCKER_GROUP_ID}
+    user: ${COWRIE_USER}
+    image: monitor_metric
     command: ['python', 'metric.py']
-    container_name: monitor_stats
+    container_name: monitor_metric
     volumes:
-      - ./config.ini:/usr/src/app/config.ini
+      - ./config.ini:/monitor/monitor/config.ini
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./logs:/usr/src/app/logs
+      - ./log:/monitor/log
 
   monitor_process:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile_monitor
+      args:
+        COWRIE_USER_ID: ${COWRIE_USER_ID}
+        COWRIE_GROUP_ID: ${COWRIE_GROUP_ID}
+        DOCKER_GROUP_ID: ${DOCKER_GROUP_ID}
+    user: ${COWRIE_USER}
     image: monitor_process
-    depends_on:
-      - redis
     command: ['python', 'process.py']
     container_name: monitor_process
     volumes:
-      - ./config.ini:/usr/src/app/config.ini
+      - ./config.ini:/monitor/monitor/config.ini
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./logs:/usr/src/app/logs
-
-  monitor_terminate:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: monitor_terminate
-    depends_on:
-      - redis
-    command: ['python', 'terminate.py']
-    container_name: monitor_terminate
-    volumes:
-      - ./config.ini:/usr/src/app/config.ini
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./logs:/usr/src/app/logs
+      - ./log:/monitor/logs

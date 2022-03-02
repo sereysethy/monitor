@@ -1,10 +1,28 @@
 FROM python:3.8
 
-WORKDIR /usr/monitor
+ENV COWRIE_GROUP=cowrie \
+    COWRIE_USER=cowrie \
+    COWRIE_HOME=/monitor
+
+ARG COWRIE_USER_ID
+ARG COWRIE_GROUP_ID
+ARG DOCKER_GROUP_ID
+
+RUN groupadd -r -g ${DOCKER_GROUP_ID} docker && \
+    groupadd -r -g ${COWRIE_GROUP_ID} ${COWRIE_GROUP} && \
+    useradd -r -u ${COWRIE_USER_ID} -d ${COWRIE_HOME} -m -g ${COWRIE_GROUP} -G docker ${COWRIE_USER}
+
+USER ${COWRIE_USER}
+WORKDIR ${COWRIE_HOME}
+
+COPY --chown=${COWRIE_USER}:${COWRIE_GROUP} monitor ${COWRIE_HOME}/monitor
 COPY requirements.txt requirements.txt
-RUN pip install --upgrade pip && pip install -r requirements.txt
 
-COPY monitor /usr/monitor
-COPY terminate /usr/terminate
+RUN cd ${COWRIE_HOME} && \
+      python3 -m venv venv && \
+      . venv/bin/activate && \
+      pip install --no-cache-dir --upgrade pip && \
+      pip install -r requirements.txt
 
-# CMD ["python", "metric.py"]
+WORKDIR ${COWRIE_HOME}/monitor
+ENV PATH=${COWRIE_HOME}/venv/bin:${PATH}
