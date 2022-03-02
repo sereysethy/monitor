@@ -14,12 +14,12 @@ port = 6379
 container_name = honeypot
 network_interface = eth0
 
-[process_table]
+[process]
 looping_time = 10
 channel = channel_process
 
-[terminate_process]
-channel = channel_terminate
+[terminate]
+channel_name = channel_terminate
 looping_time = 2
 
 [metric]
