@@ -9,6 +9,8 @@ Description=Program to termniate a process upon receiving the pid from Redis ser
 Type=simple
 ExecStart=/home/cowrie/repo/monitor_stats/env/bin/python /home/cowrie/repo/monitor_stats/terminate/terminate.py /home/cowrie/repo/monitor_stats/config-terminate.ini
 ExecStop=kill -SIGTERM $MAINPID
+Restart=on-failure
+RestartSec=10
 
 [Install]
 WantedBy=multi-user.target
