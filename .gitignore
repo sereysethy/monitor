@@ -3,3 +3,4 @@ config.ini
 docker-compose.yml
 .DS_Store
 .env
+terminate.service
