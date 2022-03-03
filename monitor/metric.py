@@ -114,7 +114,7 @@ def calculateAvgCpuAndMem():
     How to define n? For now we can fix it to the last 5 or 10?
     """
 
-    # write them to redis
+    # get the first values equal to CPU_MEM_METRIC_LENGTH
     cpus = redisClient.lrange('list_cpu_usage_per', 0, CPU_MEM_METRIC_LENGTH)
     mems = redisClient.lrange('list_mem_usage_per', 0, CPU_MEM_METRIC_LENGTH)
 
@@ -129,17 +129,23 @@ def calculateAvgCpuAndMem():
     avgCpuUsagePercent = np.average(listCpus)
     avgMemUsagePercent = np.average(listMem)
 
+    # write the averaged values to Redis
     redisClient.set('avg_cpu_usage_per', avgCpuUsagePercent)
     redisClient.set('avg_mem_usage_per', avgMemUsagePercent)
+
+    # maintain a last CPU_MEM_METRIC_LENGTH values in the Redis list
+    redisClient.ltrim('list_cpu_usage_per', 0, CPU_MEM_METRIC_LENGTH + 1)
+    redisClient.ltrim('list_mem_usage_per', 0, CPU_MEM_METRIC_LENGTH + 1)
 
 def calAvgNetworkFlow():
     """
     This function will calculate the differnce between each networks in/out
     bytes written and then average them.
 
+    It indicates the flow of data in and out per a window of NETWORK_METRIC_LENGTH
     """
 
-    # write them to redis
+    # get the first values equal to CPU_MEM_METRIC_LENGTH
     netIns = redisClient.lrange('list_net_in_byte', 0, NETWORK_METRIC_LENGTH)
     netOuts = redisClient.lrange('list_net_out_byte', 0, NETWORK_METRIC_LENGTH)
 
@@ -151,13 +157,24 @@ def calAvgNetworkFlow():
     for netout in netOuts:
         listNetIn.append(float(netout))
 
+    # calculate the difference of each value
     avgNetFlowIn = np.average(np.diff(listNetIn))
     avgNetFlowOut = np.average(np.diff(listNetOut))
 
+    # write the averaged flow to Redis
     redisClient.set('avg_net_flow_in_byte', avgNetFlowIn)
     redisClient.set('avg_net_flow_out_byte', avgNetFlowOut)
 
+    # maintain a last CPU_MEM_METRIC_LENGTH values in the Redis list
+    redisClient.ltrim('list_net_in_byte', 0, NETWORK_METRIC_LENGTH + 1)
+    redisClient.ltrim('list_net_out_byte', 0, NETWORK_METRIC_LENGTH + 1)
+
 def clearRedisKeys():
+    """
+    When the program starts, this function should be called if we use a persistent
+    Redis or a Redis on a host: because data are preserved.
+    """
+
     logging.info('Clear all Redis keys')
     for key in keys:
         logging.info('Delete key: %s', key)
@@ -165,7 +182,7 @@ def clearRedisKeys():
 
 if __name__ == "__main__":
 
-    clearRedisKeys()
+    # clearRedisKeys()
 
     # connect to the running target system
     targetName = getTargetContainerName()
