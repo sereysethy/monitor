@@ -34,3 +34,8 @@ services:
       - ./config.ini:/monitor/monitor/config.ini
       - /var/run/docker.sock:/var/run/docker.sock
       - ./log:/monitor/logs
+
+networks:
+  default:
+      external: true
+      name: cowrie_default
