@@ -43,20 +43,38 @@ To install this program, make a link to `/etc/systemd/system/terminate`
 $ sudo ln -s /home/cowrie/repo/monitor_stats/terminate.service /etc/systemd/system/terminate.service
 ```
 
+After the installation, the `systemd` has to be reloaded.
+
+```sh
+sudo systemctl daemon-reload
+```
+
+Then we need to enable the service:
+
+``
+sudo systemctl enable terminate.service
+``
 To run it, we can use a service of systemd.
 
 ```sh
-$ systemctl start terminate
+$ sudo systemctl start terminate
 ```
+
+
 
 Check its status
 
 ```sh
-$ systemctl status terminate
+$ sudo  systemctl status terminate
 ```
 
 Stop the service
 
 ```sh
-$ systemctl stop terminate
+$ sudo  systemctl stop terminate
 ```
+
+Disable the service
+
+```sh
+$ sudo  systemctl disable terminate
