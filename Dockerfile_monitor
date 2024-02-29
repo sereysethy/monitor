@@ -1,4 +1,4 @@
-FROM python:3.8
+FROM python:3.10
 
 ENV COWRIE_GROUP=cowrie \
     COWRIE_USER=cowrie \
