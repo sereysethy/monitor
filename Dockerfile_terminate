@@ -1,9 +1,9 @@
-FROM python:3.8
+FROM python:3.10
 
-WORKDIR /usr/terminate
+WORKDIR /terminate
 COPY requirements.txt requirements.txt
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
-COPY terminate /usr/terminate
+COPY terminate /terminate
 
 CMD ["python", "terminate.py", "config.ini"]
