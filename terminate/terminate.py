@@ -50,7 +50,8 @@ def runTerminateProcessLoop(channel, loopingTime):
                 logging.error(e)
             except PermissionError as e:
                 logging.error(e)
-        time.sleep(loopingTime)
+        else:
+            time.sleep(loopingTime)
 
 # redis
 def getRedisClient(config):
@@ -60,7 +61,7 @@ def getRedisClient(config):
         redisClient = redis.Redis(host=host, port=port)
     except redis.ConnectionError:
         exit(1)
-    
+
     return redisClient
 
 if __name__ == "__main__":
@@ -71,11 +72,11 @@ if __name__ == "__main__":
     configPath = sys.argv[1]
     config = configparser.ConfigParser()
     config.read(configPath)
-    
+
     logLevel = config.get('log', 'level', fallback='INFO')
     logPath = config.get('log', 'path')
     logPathname = join(logPath, 'terminate.log')
-    logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=logLevel, 
+    logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=logLevel,
         handlers=[
             TimedRotatingFileHandler(logPathname, when='midnight'),
             logging.StreamHandler()
@@ -95,4 +96,3 @@ if __name__ == "__main__":
     logging.info("start the terminating process loop")
     runTerminateProcessLoop(channel, loopingTime)
 
-    
