@@ -53,10 +53,12 @@ def runProcessLoop(container):
         None
     """
 
+    global SSHD_PID
+
     logging.info("starting the process monitor loop")
 
     while True:
-        res = container.top()
+        res = container.top(ps_args="-eo uid,pid,ppid,c,stime,tty,time,cmd,comm")
 
         for proc in res['Processes']:
             logging.debug('processing process: %s', proc)
@@ -68,6 +70,7 @@ def runProcessLoop(container):
             ptty = proc[5]
             ptime = proc[6]
             pcmd = proc[7]
+            pcomm = proc[8]
 
             if pid != SSHD_PID:
                 o = {}
@@ -79,8 +82,9 @@ def runProcessLoop(container):
                 o['tty'] = ptty
                 o['ptime'] = ptime
                 o['cmd'] = pcmd
+                o['comm'] = pcomm
 
-            redisClient.publish(REDIS_CHANNEL_NAME, json.dumps(o))
+                redisClient.publish(REDIS_CHANNEL_NAME, json.dumps(o))
 
         time.sleep(LOOPING_TIME)
 
@@ -89,6 +93,8 @@ def findSSHProcess():
     This function will run to find the first ssh process. It will record its pid,
     and other information used to ignore this program.
     """
+
+    global SSHD_PID
 
     ssh_proc_found = False
     logging.info('Finding SSH process')
@@ -119,7 +125,7 @@ def findSSHProcess():
 
                 SSHD_PID = pid
 
-                logging.info(f'Found SSH pid: {pid}, and stored it at key {REDIS_SSH_PROCESS}')
+                logging.info(f'Found SSH pid: {SSHD_PID}, and stored it at key {REDIS_SSH_PROCESS}')
                 redisClient.set(REDIS_SSH_PROCESS, json.dumps(o))
         time.sleep(0.1)
 
