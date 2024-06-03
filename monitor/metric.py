@@ -8,7 +8,7 @@ from settings import getLoglevel, getLogpath
 
 logpath = join(getLogpath(), 'metric.log')
 loglevel = getLoglevel()
-logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=loglevel, 
+logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=loglevel,
                     handlers=[
                         TimedRotatingFileHandler(logpath, when='midnight'),
                         logging.StreamHandler()
@@ -48,7 +48,7 @@ def runMetricsLoop(container, networkInterface):
     """
     This function will fetch stream of metric data from the docker container.
 
-    At each iteration, it will gather a metric information and store them in 
+    At each iteration, it will gather a metric information and store them in
     a redis server for later consumption. The metric inforamtion is updated
     continuosly.
 
@@ -86,11 +86,12 @@ def runMetricsLoop(container, networkInterface):
             cpuUsagePercent = (cpuDelta / systemDelta) * metric["cpu_stats"]["online_cpus"] * 100.0
         else:
             cpuUsagePercent = 0.0
-        
+
         # get a current read
         memUsagePercent = metric['memory_stats']['usage'] * 100/metric['memory_stats']['limit']
         netInUsageByte = metric['networks'][networkInterface]['rx_bytes']
         netOutUsageByte = metric['networks'][networkInterface]['tx_bytes']
+        blkReadByte, blkWriteByte = _getBlkIOfromMetric(metric)
 
         # push the current metric to the redis lists
         redisClient.lpush('list_cpu_usage_per', cpuUsagePercent)
@@ -102,11 +103,38 @@ def runMetricsLoop(container, networkInterface):
         redisClient.set('cpu_usage_per', cpuUsagePercent)
         redisClient.set('mem_usage_per', memUsagePercent)
         redisClient.set('net_in_byte', netInUsageByte)
-        redisClient.set('mem_out_byte', netOutUsageByte)
+        redisClient.set('net_out_byte', netOutUsageByte)
+        redisClient.set('blk_read_byte', blkReadByte)
+        redisClient.set('blk_write_byte', blkWriteByte)
 
         calculateAvgCpuAndMem()
         calAvgNetworkFlow()
-        
+
+def _getBlkIOfromMetric(metric):
+    """
+    This will sum all the i/o read and write operations.
+
+    Params
+    ------
+        metric (dict): stats containing the metric of a container
+    Returns
+    -------
+        read_bytes (int) and write_bytes (int)
+    """
+
+    io_stats = metric['blkio_stats']['io_service_bytes_recursive']
+
+    read_bytes = 0
+    write_bytes = 0
+
+    for entry in io_stats:
+        if entry['op'] == 'Read':
+            read_bytes += entry['value']
+        elif entry['op'] == 'Write':
+            write_bytes += entry['value']
+
+    return read_bytes, write_bytes
+
 def calculateAvgCpuAndMem():
     """
     The idea is to caculate an average over n of cpu and memory comsumption metrics.
