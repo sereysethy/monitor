@@ -1,0 +1,128 @@
+{
+    'read': '2024-06-03T08:13:35.126682342Z', 
+    'preread': '2024-06-03T08:13:34.122807534Z', 
+    'pids_stats': {'current': 1}, 
+    'blkio_stats': {
+        'io_service_bytes_recursive': [
+            {'major': 8, 'minor': 0, 'op': 'Read', 'value': 708608}, 
+            {'major': 8, 'minor': 0, 'op': 'Write', 'value': 122880}, 
+            {'major': 8, 'minor': 0, 'op': 'Sync', 'value': 827392}, 
+            {'major': 8, 'minor': 0, 'op': 'Async', 'value': 4096}, 
+            {'major': 8, 'minor': 0, 'op': 'Discard', 'value': 0}, 
+            {'major': 8, 'minor': 0, 'op': 'Total', 'value': 831488}, 
+            {'major': 253, 'minor': 0, 'op': 'Read', 'value': 708608}, 
+            {'major': 253, 'minor': 0, 'op': 'Write', 'value': 122880},
+            {'major': 253, 'minor': 0, 'op': 'Sync', 'value': 827392}, 
+            {'major': 253, 'minor': 0, 'op': 'Async', 'value': 4096}, 
+            {'major': 253, 'minor': 0, 'op': 'Discard', 'value': 0}, 
+            {'major': 253, 'minor': 0, 'op': 'Total', 'value': 831488}
+        ], 
+        'io_serviced_recursive': [
+            {'major': 8, 'minor': 0, 'op': 'Read', 'value': 16}, 
+            {'major': 8, 'minor': 0, 'op': 'Write', 'value': 23}, 
+            {'major': 8, 'minor': 0, 'op': 'Sync', 'value': 38}, 
+            {'major': 8, 'minor': 0, 'op': 'Async', 'value': 1}, 
+            {'major': 8, 'minor': 0, 'op': 'Discard', 'value': 0}, 
+            {'major': 8, 'minor': 0, 'op': 'Total', 'value': 39}, 
+            {'major': 253, 'minor': 0, 'op': 'Read', 'value': 16}, 
+            {'major': 253, 'minor': 0, 'op': 'Write', 'value': 23}, 
+            {'major': 253, 'minor': 0, 'op': 'Sync', 'value': 38}, 
+            {'major': 253, 'minor': 0, 'op': 'Async', 'value': 1}, 
+            {'major': 253, 'minor': 0, 'op': 'Discard', 'value': 0}, 
+            {'major': 253, 'minor': 0, 'op': 'Total', 'value': 39}
+        ], 
+        'io_queue_recursive': [], 
+        'io_service_time_recursive': [], 
+        'io_wait_time_recursive': [],
+        'io_merged_recursive': [],
+        'io_time_recursive': [],
+        'sectors_recursive': []
+    }, 
+    'num_procs': 0,
+    'storage_stats': {},
+    'cpu_stats': {
+        'cpu_usage': {
+            'total_usage': 550432868, 
+            'percpu_usage': [
+                19561155, 36039988, 14454621, 50732245, 111619481, 49994514, 1682253, 12919717, 6304539, 8287229, 47867667, 3321286, 152543560, 10347346, 6009534, 18747733
+            ], 
+            'usage_in_kernelmode': 190000000, 
+            'usage_in_usermode': 340000000
+        },
+        'system_cpu_usage': 21418197120000000, 
+        'online_cpus': 16, 
+        'throttling_data': {
+            'periods': 0,
+            'throttled_periods': 0,
+            'throttled_time': 0}
+    }, 
+    'precpu_stats': {
+        'cpu_usage': {
+            'total_usage': 550432868,
+            'percpu_usage': [19561155, 36039988, 14454621, 50732245, 111619481, 49994514, 1682253, 12919717, 6304539, 8287229, 47867667, 3321286, 152543560, 10347346, 6009534, 18747733
+                    ],
+            'usage_in_kernelmode': 190000000,
+            'usage_in_usermode': 340000000
+        },
+        'system_cpu_usage': 21418181080000000,
+        'online_cpus': 16,
+        'throttling_data': {
+            'periods': 0,
+            'throttled_periods': 0,
+            'throttled_time': 0
+            }
+    },
+    'memory_stats': {
+        'usage': 9498624, 
+        'max_usage': 12488704, 
+        'stats': {
+            'active_anon': 1216512,
+            'active_file': 0,
+            'cache': 540672,
+            'dirty': 0,
+            'hierarchical_memory_limit': 9223372036854771712,
+            'hierarchical_memsw_limit': 0,
+            'inactive_anon': 0,
+            'inactive_file': 540672,
+            'mapped_file': 0,
+            'pgfault': 17193,
+            'pgmajfault': 0,
+            'pgpgin': 10164,
+            'pgpgout': 9858,
+            'rss': 1302528,
+            'rss_huge': 0,
+            'total_active_anon': 1216512,
+            'total_active_file': 0,
+            'total_cache': 540672,
+            'total_dirty': 0,
+            'total_inactive_anon': 0,
+            'total_inactive_file': 540672,
+            'total_mapped_file': 0,
+            'total_pgfault': 17193,
+            'total_pgmajfault': 0,
+            'total_pgpgin': 10164,
+            'total_pgpgout': 9858,
+            'total_rss': 1302528,
+            'total_rss_huge': 0,
+            'total_unevictable': 0,
+            'total_writeback': 0,
+            'unevictable': 0,
+            'writeback': 0
+            },
+        'limit': 16771436544
+    },
+    'name': '/lilybyte',
+    'id': 'cc7d070f0a1beeab5dd3bd6729c26f0150305f73b8e357888c75673bcc1ca3a5',
+    'networks': {
+        'eth0': {
+            'rx_bytes': 191459, 
+            'rx_packets': 1184, 
+            'rx_errors': 0,
+            'rx_dropped': 0,
+            'tx_bytes': 30326,
+            'tx_packets': 173,
+            'tx_errors': 0,
+            'tx_dropped': 0
+            }
+        }
+}  
