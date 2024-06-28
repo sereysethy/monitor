@@ -1,9 +1,8 @@
 import configparser
-import os 
-from os.path import join
+import os
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
-config_path = join(dir_path, 'config.ini')
+config_path = os.path.join(dir_path, 'config.ini')
 
 config = configparser.ConfigParser()
 config.read(config_path)
@@ -35,9 +34,20 @@ def getProcessChannel():
 def getProcessLoopingTime():
     return config.getint('process', 'looping_time')
 
+def getProcPath():
+    return config.get('process', 'proc_path')
+
+def getDigestFile():
+    return config.get('process', 'ignored_digest_file')
+
+def getCmdDigestFile():
+    return config.get('process', 'not_saved_digest_file')
+
+def getExeDirPath():
+    return config.get('process', 'exe_dir_path')
+
 def getCPUMemMetricAvgLength():
     return config.getint('metric', 'metric_cpu_mem_avg_length')
 
 def getNetworkMetricAvgLength():
     return config.getint('metric', 'metric_network_avg_length')
-

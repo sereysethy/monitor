@@ -1,12 +1,27 @@
 import logging
 import time
 import json
+import shutil
 import docker
-from os.path import join
+from os import path
+import sys
 from logging.handlers import TimedRotatingFileHandler
-from settings import getLoglevel, getLogpath
 
-logpath = join(getLogpath(), 'process.log')
+from settings import (
+    getLoglevel,
+    getLogpath,
+    getTargetContainerName,
+    getProcessLoopingTime,
+    getProcessChannel,
+    getProcPath,
+    getDigestFile,
+    getExeDirPath,
+    getCmdDigestFile
+)
+
+from utils import getRedisClient, getDockerClient, getFileHash
+
+logpath = path.join(getLogpath(), 'process.log')
 loglevel = getLoglevel()
 logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=loglevel,
                     handlers=[
@@ -14,23 +29,117 @@ logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=logle
                         logging.StreamHandler()
                     ])
 
-from settings import getTargetContainerName, getProcessLoopingTime, getProcessChannel
-from utils import getRedisClient, getDockerClient
-
 # get docker client
 dockerClient = getDockerClient()
 
 # redis
 redisClient = getRedisClient()
 
+# this hold digests that we will be ignored
+digestDict = {}
+
+# this hold digests of commands that will not be saved
+cmdDigestDict = {}
+
+# this is flag to publish to redis or not
+publish_to_redis = True
+
 # read from configuration setting
 REDIS_SSH_PROCESS = "ssh_process"
 REDIS_CHANNEL_NAME = getProcessChannel()
+PROC_PATH = getProcPath()
+DIGEST_FILE = getDigestFile()
+CMD_DIGEST_FILE = getCmdDigestFile()
+EXE_DIR_PATH = getExeDirPath()
 LOOPING_TIME = getProcessLoopingTime()
 logging.info('REDIS_CHANNEL_NAME: %s', REDIS_CHANNEL_NAME)
 logging.info('LOOPING_TIME: %d', LOOPING_TIME)
 
 SSHD_PID = None
+
+def loadCmdDigest()->dict:
+    """
+    Load command and their digests, these commands will not be saved!
+    """
+
+    global CMD_DIGEST_FILE
+
+    cmdDict = {}
+
+    logging.info(f"loading non-saved digest file at: {CMD_DIGEST_FILE}")
+
+    with open(CMD_DIGEST_FILE, "r") as fin:
+        for line in fin:
+            cmdDigests = line.strip().split(":")
+            cmd, digest = cmdDigests[0], cmdDigests[1]
+            logging.debug(f"for cmd {cmd}, digest: {digest}")
+            cmdDict[digest] = cmd
+
+    return cmdDict
+
+def loadDigest()->dict:
+    """
+    Load command and their digests, these commands will be ignored!
+    """
+    global DIGEST_FILE
+
+    cmdDict = {}
+
+    logging.info(f"loading digest file at: {DIGEST_FILE}")
+
+    with open(DIGEST_FILE, "r") as fin:
+        for line in fin:
+            cmdDigests = line.strip().split(":")
+            cmd, digest = cmdDigests[0], cmdDigests[1]
+            logging.debug(f"for cmd {cmd}, digest: {digest}")
+            cmdDict[digest] = cmd
+
+    return cmdDict
+
+def saveFile(filepath: str, name: str, digest: str)->None:
+    """
+    Save exe file, when they are not in the list
+    """
+    global EXE_DIR_PATH
+
+    filename = f"{EXE_DIR_PATH}/filename.txt"
+    dest = f"{EXE_DIR_PATH}/{digest}"
+    if not path.isfile(dest):
+        with open(filename, "a") as fout:
+            logging.info(f"saving file {filename}, digest: {digest}")
+            fout.write(f"{name}:{digest}\n")
+            shutil.copy2(filepath, dest)
+
+def isKnownHash(name: str, pid: str)->bool:
+    """
+    This will check exe corresponding to the pid in proc against a list of
+    known files like /usr/sbin/sshd, /bin/bash, etc. and it will return `True`
+    if its signature is known.
+
+    Params
+    ------
+        pid (str): pid of exe to check
+    Returns
+    -------
+        True if the hash is known in the list, otherwise False.
+    """
+
+    global PROC_PATH
+    global digestDict, cmdDigestDict
+
+    filepath = f"{PROC_PATH}/{pid}/exe"
+
+    digest = getFileHash(filepath)
+
+    if digest and digest in digestDict:
+        return True
+    else:
+        if digest not in cmdDigestDict:
+            saveFile(filepath, name, digest)
+        else:
+            logging.info(f"{name} is found, not saved!")
+        return False
+
 def runProcessLoop(container):
     """
     This function will continously exect `docker top` on the container that
@@ -54,6 +163,7 @@ def runProcessLoop(container):
     """
 
     global SSHD_PID
+    global publish_to_redis
 
     logging.info("starting the process monitor loop")
 
@@ -72,7 +182,8 @@ def runProcessLoop(container):
             pcmd = proc[7]
             pcomm = proc[8]
 
-            if pid != SSHD_PID:
+            if pid != SSHD_PID and not isKnownHash(pcmd, pid):
+                logging.info(f"checking of pid: {pid}:{pcmd}")
                 o = {}
                 o['uid'] = puid
                 o['pid'] = pid
@@ -84,7 +195,8 @@ def runProcessLoop(container):
                 o['cmd'] = pcmd
                 o['comm'] = pcomm
 
-                redisClient.publish(REDIS_CHANNEL_NAME, json.dumps(o))
+                if publish_to_redis:
+                    redisClient.publish(REDIS_CHANNEL_NAME, json.dumps(o))
 
         time.sleep(LOOPING_TIME)
 
@@ -130,8 +242,16 @@ def findSSHProcess():
         time.sleep(0.1)
 
 if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        if sys.argv[1] == "nop_ub":
+            publish_to_redis = False
+            logging.info("not publishing to redis")
+
     # connect to the running target system
     targetName = getTargetContainerName()
+    digestDict = loadDigest()
+    cmdDigestDict = loadCmdDigest()
+
     while True:
         try:
             container = dockerClient.containers.get(targetName)
@@ -143,4 +263,3 @@ if __name__ == "__main__":
 
     findSSHProcess()
     runProcessLoop(container)
-
