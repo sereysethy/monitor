@@ -1,6 +1,7 @@
 [log]
 # DEBUG, INFO, WARNING, ERROR, CRITICAL
 level = INFO
+path = /monitor/log
 
 [docker]
 uri = unix://var/run/docker.sock
@@ -17,6 +18,10 @@ network_interface = eth0
 [process]
 looping_time = 10
 channel = channel_process
+proc_path = /var/lib/proc
+ignored_digest_file = /monitor/monitor/ignored_digest.txt
+not_saved_digest_file = /monitor/monitor/not_saved_digest.txt
+exe_dir_path = /monitor/monitor/exe
 
 [terminate]
 channel_name = channel_terminate
