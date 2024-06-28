@@ -8,14 +8,14 @@ ARG COWRIE_USER_ID
 ARG COWRIE_GROUP_ID
 ARG DOCKER_GROUP_ID
 
-RUN groupadd -r -g ${DOCKER_GROUP_ID} docker && \
-    groupadd -r -g ${COWRIE_GROUP_ID} ${COWRIE_GROUP} && \
-    useradd -r -u ${COWRIE_USER_ID} -d ${COWRIE_HOME} -m -g ${COWRIE_GROUP} -G docker ${COWRIE_USER}
+# RUN groupadd -r -g ${DOCKER_GROUP_ID} docker && \
+#     groupadd -r -g ${COWRIE_GROUP_ID} ${COWRIE_GROUP} && \
+#     useradd -r -u ${COWRIE_USER_ID} -d ${COWRIE_HOME} -m -g ${COWRIE_GROUP} -G docker ${COWRIE_USER}
 
-USER ${COWRIE_USER}
+# USER ${COWRIE_USER}
 WORKDIR ${COWRIE_HOME}
 
-COPY --chown=${COWRIE_USER}:${COWRIE_GROUP} monitor ${COWRIE_HOME}/monitor
+COPY monitor ${COWRIE_HOME}/monitor
 COPY requirements.txt requirements.txt
 
 RUN cd ${COWRIE_HOME} && \
