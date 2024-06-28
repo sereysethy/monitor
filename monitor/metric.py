@@ -154,8 +154,14 @@ def calculateAvgCpuAndMem():
     for mem in mems:
         listMem.append(float(mem))
 
-    avgCpuUsagePercent = np.average(listCpus)
-    avgMemUsagePercent = np.average(listMem)
+    if listCpus:
+        avgCpuUsagePercent = np.average(listCpus).tolist()
+    else:
+        avgCpuUsagePercent = 0.0
+    if listMem:
+        avgMemUsagePercent = np.average(listMem).tolist()
+    else:
+        avgMemUsagePercent = 0.0
 
     # write the averaged values to Redis
     redisClient.set('avg_cpu_usage_per', avgCpuUsagePercent)
@@ -226,4 +232,3 @@ if __name__ == "__main__":
 
     logging.info("starting the metric loop")
     runMetricsLoop(container, networkInterface)
-
