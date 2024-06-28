@@ -243,7 +243,7 @@ def findSSHProcess():
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
-        if sys.argv[1] == "nop_ub":
+        if sys.argv[1] == "nop_pub":
             publish_to_redis = False
             logging.info("not publishing to redis")
 
