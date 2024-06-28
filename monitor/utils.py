@@ -47,10 +47,10 @@ def getFileHash(path: str, hashalgo: str = "sha256")->str:
             m.update(fin.read())
             digest = m.hexdigest()
     except FileNotFoundError as e:
-        logging.info(f"{e}")
+        logging.error(f"{e}")
         digest = None
     except PermissionError as e:
-        logging.info(f"{e}")
+        logging.error(f"{e}")
         digest = None
 
     return digest

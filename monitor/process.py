@@ -29,6 +29,12 @@ logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=logle
                         logging.StreamHandler()
                     ])
 
+# constant to check for digest
+DIGEST_IGNORED = 0
+DIGEST_UNKNOWN = 1
+DIGEST_KNOWN_CMD = 2
+DIGEST_ERROR = 99
+
 # get docker client
 dockerClient = getDockerClient()
 
@@ -96,7 +102,7 @@ def loadDigest()->dict:
 
     return cmdDict
 
-def saveFile(filepath: str, name: str, digest: str)->None:
+def saveFile(execFilepath: str, name: str, digest: str)->None:
     """
     Save exe file, when they are not in the list
     """
@@ -104,11 +110,17 @@ def saveFile(filepath: str, name: str, digest: str)->None:
 
     filename = f"{EXE_DIR_PATH}/filename.txt"
     dest = f"{EXE_DIR_PATH}/{digest}"
+
     if not path.isfile(dest):
-        with open(filename, "a") as fout:
-            logging.info(f"saving file {filename}, digest: {digest}")
-            fout.write(f"{name}:{digest}\n")
-            shutil.copy2(filepath, dest)
+        try:
+            with open(filename, "a") as fout:
+                logging.info(f"saving file {filename}, digest: {digest}")
+                fout.write(f"{name}:{digest}\n")
+                shutil.copy2(execFilepath + "1", dest)
+        except FileNotFoundError as e:
+            logging.error("saveFile: %s", e)
+        except Exception as e:
+            logging.error("cant save file")
 
 def isKnownHash(name: str, pid: str)->bool:
     """
@@ -131,14 +143,17 @@ def isKnownHash(name: str, pid: str)->bool:
 
     digest = getFileHash(filepath)
 
-    if digest and digest in digestDict:
-        return True
-    else:
-        if digest not in cmdDigestDict:
+    if digest:
+        if digest in digestDict:
+            return DIGEST_IGNORED
+        elif digest not in cmdDigestDict:
             saveFile(filepath, name, digest)
+            return DIGEST_UNKNOWN
         else:
             logging.info(f"{name} is found, not saved!")
-        return False
+            return DIGEST_KNOWN_CMD
+
+    return DIGEST_ERROR
 
 def runProcessLoop(container):
     """
@@ -182,8 +197,10 @@ def runProcessLoop(container):
             pcmd = proc[7]
             pcomm = proc[8]
 
-            if pid != SSHD_PID and not isKnownHash(pcmd, pid):
-                logging.info(f"checking of pid: {pid}:{pcmd}")
+            result = isKnownHash(pcmd, pid)
+
+            if pid != SSHD_PID and result == DIGEST_UNKNOWN :
+                logging.debug(f"checking of pid: {pid}:{pcmd}")
                 o = {}
                 o['uid'] = puid
                 o['pid'] = pid
