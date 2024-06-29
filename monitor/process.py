@@ -116,7 +116,7 @@ def saveFile(execFilepath: str, name: str, digest: str)->None:
             with open(filename, "a") as fout:
                 logging.info(f"saving file {filename}, digest: {digest}")
                 fout.write(f"{name}:{digest}\n")
-                shutil.copy2(execFilepath + "1", dest)
+                shutil.copy2(execFilepath, dest)
         except FileNotFoundError as e:
             logging.error("saveFile: %s", e)
         except Exception as e:
