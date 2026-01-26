@@ -29,4 +29,3 @@ looping_time = 2
 
 [metric]
 metric_cpu_mem_avg_length = 10
-metric_network_avg_length = 10
