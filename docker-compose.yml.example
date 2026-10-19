@@ -3,7 +3,7 @@ services:
     image: redis
     container_name: redis
     ports:
-      - 6379:6379
+      - "127.0.0.1:6379:6379"
 
   monitor_metric:
     build:
@@ -13,10 +13,10 @@ services:
         COWRIE_USER_ID: ${COWRIE_USER_ID}
         COWRIE_GROUP_ID: ${COWRIE_GROUP_ID}
         DOCKER_GROUP_ID: ${DOCKER_GROUP_ID}
-    image: monitor_metric
     user: ${COWRIE_USER}
-    #depends_on:
-    #  - redis
+    image: monitor_metric
+    depends_on:
+      - redis
     command: ['python', 'metric.py']
     container_name: monitor_metric
     volumes:
@@ -32,23 +32,13 @@ services:
         COWRIE_USER_ID: ${COWRIE_USER_ID}
         COWRIE_GROUP_ID: ${COWRIE_GROUP_ID}
         DOCKER_GROUP_ID: ${DOCKER_GROUP_ID}
+    user: ${COWRIE_USER}
     image: monitor_process
-    privileged: true
-    #user: ${COWRIE_USER}
-    #depends_on:
-    #  - redis
+    depends_on:
+      - redis
     command: ['python', 'process.py']
     container_name: monitor_process
     volumes:
       - ./config.ini:/monitor/monitor/config.ini
       - /var/run/docker.sock:/var/run/docker.sock
       - ./log:/monitor/log
-      - /proc:/var/lib/proc
-      - ./data_monitor/ignored_digest.txt:/monitor/monitor/ignored_digest.txt
-      - ./data_monitor/not_saved_digest.txt:/monitor/monitor/not_saved_digest.txt
-      - ./data_monitor/exe:/monitor/monitor/exe
-
-networks:
-  default:
-      external: true
-      name: cowrie_default
