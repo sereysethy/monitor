@@ -53,7 +53,7 @@ exe_dir_path = /monitor/monitor/exe
 * `channel`: a Redis channel to publish the list of running processes.
 * `proc_path`: a path to read process images
 * `ignored_digest_file`: a path to read a list of file digests `SHA256` which will be ignored.
-* `not_saved_digest_file`: a path to read a list of file digests `SHA256` which will not be saved.
+* `not_saved_digest_file`: a path to read a list of file digests `SHA256` which are previously saved, such that they will not be saved again. This to avoid redundant file.
 * `exe_dir_path`: directory where process images are saved.
 
 ## Terminate service
