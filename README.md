@@ -150,7 +150,7 @@ The user must be granted permission to connect to the Docker engine.
    ```bash
    cp docker-compose.yml.example docker-compose.yml
    ```
-2. Build the two images, `monitor_metric` and `monitor_process`:
+2. Build the images, `monitor_metric` and `monitor_process`:
    ```bash
    docker compose build
    ```
