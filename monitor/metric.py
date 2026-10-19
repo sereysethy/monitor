@@ -22,14 +22,12 @@ from utils import getRedisClient, getDockerClient
 keys = [
     'list_cpu_usage_per',
     'list_mem_usage_per',
-    'list_net_in_byte',
-    'list_net_out_byte',
-    'avg_net_flow_in_byte',
-    'avg_net_flow_out_byte',
     'cpu_usage_per',
     'mem_usage_per',
     'net_in_byte',
-    'mem_out_byte',
+    'net_out_byte',
+    'blk_read_byte',
+    'blk_write_byte'
 ]
 
 # get docker client
@@ -65,6 +63,7 @@ def runMetricsLoop(container, networkInterface):
         ------
             container (docker.Container) container object that we want to gather
             its metric.
+            networkInterface (str) the network interface name that we want to gather its metric.
         Returns
         ------
             It does not return any values.
@@ -96,8 +95,6 @@ def runMetricsLoop(container, networkInterface):
         # push the current metric to the redis lists
         redisClient.lpush('list_cpu_usage_per', cpuUsagePercent)
         redisClient.lpush('list_mem_usage_per', memUsagePercent)
-        redisClient.lpush('list_net_in_byte', netInUsageByte)
-        redisClient.lpush('list_net_out_byte', netOutUsageByte)
 
         # set the current metric to the redis
         redisClient.set('cpu_usage_per', cpuUsagePercent)
@@ -108,7 +105,6 @@ def runMetricsLoop(container, networkInterface):
         redisClient.set('blk_write_byte', blkWriteByte)
 
         calculateAvgCpuAndMem()
-        calAvgNetworkFlow()
 
 def _getBlkIOfromMetric(metric):
     """
@@ -170,38 +166,6 @@ def calculateAvgCpuAndMem():
     # maintain a last CPU_MEM_METRIC_LENGTH values in the Redis list
     redisClient.ltrim('list_cpu_usage_per', 0, CPU_MEM_METRIC_LENGTH + 1)
     redisClient.ltrim('list_mem_usage_per', 0, CPU_MEM_METRIC_LENGTH + 1)
-
-def calAvgNetworkFlow():
-    """
-    This function will calculate the differnce between each networks in/out
-    bytes written and then average them.
-
-    It indicates the flow of data in and out per a window of NETWORK_METRIC_LENGTH
-    """
-
-    # get the first values equal to CPU_MEM_METRIC_LENGTH
-    netIns = redisClient.lrange('list_net_in_byte', 0, NETWORK_METRIC_LENGTH)
-    netOuts = redisClient.lrange('list_net_out_byte', 0, NETWORK_METRIC_LENGTH)
-
-    listNetIn = []
-    for netin in netIns:
-        listNetIn.append(float(netin))
-
-    listNetOut = []
-    for netout in netOuts:
-        listNetIn.append(float(netout))
-
-    # calculate the difference of each value
-    avgNetFlowIn = np.average(np.diff(listNetIn))
-    avgNetFlowOut = np.average(np.diff(listNetOut))
-
-    # write the averaged flow to Redis
-    redisClient.set('avg_net_flow_in_byte', avgNetFlowIn)
-    redisClient.set('avg_net_flow_out_byte', avgNetFlowOut)
-
-    # maintain a last CPU_MEM_METRIC_LENGTH values in the Redis list
-    redisClient.ltrim('list_net_in_byte', 0, NETWORK_METRIC_LENGTH + 1)
-    redisClient.ltrim('list_net_out_byte', 0, NETWORK_METRIC_LENGTH + 1)
 
 def clearRedisKeys():
     """
